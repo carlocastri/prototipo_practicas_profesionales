@@ -1,0 +1,251 @@
+<header class="encabezado">
+  <div>
+    <p class="marca">Plataforma de Prácticas Profesionales</p>
+    <p class="submarca">Prototipo funcional · Taller integrador Unidad 3</p>
+  </div>
+  <span class="etiqueta neutra">Entorno de prueba</span>
+</header>
+
+<nav class="pestanas" aria-label="Módulos del prototipo">
+  @for (item of secciones; track item.id) {
+    <button type="button" [class.activa]="seccion() === item.id" (click)="irA(item.id)">
+      {{ item.nombre }}
+    </button>
+  }
+</nav>
+
+<main>
+  @if (aviso(); as mensaje) {
+    <p class="aviso" [class.error]="mensaje.tipo === 'error'" role="status">{{ mensaje.texto }}</p>
+  }
+
+  @switch (seccion()) {
+    @case ('empresas') {
+      <section class="rejilla">
+        <form class="tarjeta" #formEmpresa="ngForm" (ngSubmit)="registrarEmpresa()">
+          <h2>Registrar empresa</h2>
+          <p class="ayuda">RF03 · La empresa queda pendiente de validación por la coordinación.</p>
+          <label>NIT
+            <input name="nit" [(ngModel)]="empresa.nit" required placeholder="900123456-7" />
+          </label>
+          <label>Razón social
+            <input name="razonSocial" [(ngModel)]="empresa.razonSocial" required />
+          </label>
+          <label>Representante legal
+            <input name="representanteLegal" [(ngModel)]="empresa.representanteLegal" required />
+          </label>
+          <label>Correo de contacto
+            <input name="correo" type="email" [(ngModel)]="empresa.correo" required />
+          </label>
+          <button type="submit" class="principal" [disabled]="formEmpresa.invalid">Registrar empresa</button>
+        </form>
+
+        <div class="tarjeta">
+          <h2>Empresas registradas</h2>
+          <p class="ayuda">RF04 · El coordinador de prácticas aprueba la empresa.</p>
+          <div class="tabla-contenedor">
+            <table>
+              <thead>
+                <tr><th>NIT</th><th>Razón social</th><th>Estado</th><th>Acción</th></tr>
+              </thead>
+              <tbody>
+                @for (item of empresas(); track item.id) {
+                  <tr>
+                    <td>{{ item.nit }}</td>
+                    <td>{{ item.razonSocial }}</td>
+                    <td>
+                      @if (item.estado === 'APROBADA') {
+                        <span class="etiqueta ok">Aprobada</span>
+                      } @else {
+                        <span class="etiqueta pendiente">Pendiente de validación</span>
+                      }
+                    </td>
+                    <td>
+                      @if (item.estado !== 'APROBADA') {
+                        <button type="button" class="secundario" (click)="aprobarEmpresa(item)">Aprobar</button>
+                      } @else {
+                        —
+                      }
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr><td colspan="4" class="vacio">Aún no hay empresas registradas.</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    }
+
+    @case ('estudiantes') {
+      <section class="rejilla">
+        <form class="tarjeta" #formEstudiante="ngForm" (ngSubmit)="registrarEstudiante()">
+          <h2>Registrar estudiante</h2>
+          <p class="ayuda">Datos mínimos necesarios para la práctica (Ley 1581 de 2012).</p>
+          <label>Documento
+            <input name="documento" [(ngModel)]="estudiante.documento" required />
+          </label>
+          <label>Nombre completo
+            <input name="nombre" [(ngModel)]="estudiante.nombre" required />
+          </label>
+          <label>Correo institucional
+            <input name="correo" type="email" [(ngModel)]="estudiante.correo" required />
+          </label>
+          <label>Programa
+            <input name="programa" [(ngModel)]="estudiante.programa" required />
+          </label>
+          <label>Semestre
+            <input name="semestre" type="number" min="1" max="12" [(ngModel)]="estudiante.semestre" required />
+          </label>
+          <button type="submit" class="principal" [disabled]="formEstudiante.invalid">Registrar estudiante</button>
+        </form>
+
+        <div class="tarjeta">
+          <h2>Estudiantes registrados</h2>
+          <div class="tabla-contenedor">
+            <table>
+              <thead>
+                <tr><th>Documento</th><th>Nombre</th><th>Programa</th><th>Semestre</th></tr>
+              </thead>
+              <tbody>
+                @for (item of estudiantes(); track item.id) {
+                  <tr>
+                    <td>{{ item.documento }}</td>
+                    <td>{{ item.nombre }}</td>
+                    <td>{{ item.programa }}</td>
+                    <td>{{ item.semestre }}</td>
+                  </tr>
+                } @empty {
+                  <tr><td colspan="4" class="vacio">Aún no hay estudiantes registrados.</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    }
+
+    @case ('vacantes') {
+      <section class="rejilla">
+        <form class="tarjeta" #formVacante="ngForm" (ngSubmit)="publicarVacante()">
+          <h2>Publicar vacante</h2>
+          <p class="ayuda">RF05 · Solo las empresas aprobadas pueden publicar vacantes.</p>
+          <label>Empresa
+            <select name="idEmpresa" [(ngModel)]="vacante.idEmpresa" required>
+              <option [ngValue]="null" disabled>Seleccione una empresa</option>
+              @for (item of empresas(); track item.id) {
+                <option [ngValue]="item.id">
+                  {{ item.razonSocial }}{{ item.estado === 'APROBADA' ? '' : ' (pendiente de validación)' }}
+                </option>
+              }
+            </select>
+          </label>
+          <label>Título
+            <input name="titulo" [(ngModel)]="vacante.titulo" required />
+          </label>
+          <label>Descripción
+            <textarea name="descripcion" rows="2" [(ngModel)]="vacante.descripcion" required></textarea>
+          </label>
+          <label>Criterios de selección
+            <textarea name="criterios" rows="2" [(ngModel)]="vacante.criteriosSeleccion" required></textarea>
+          </label>
+          <div class="dos-columnas">
+            <label>Cupos
+              <input name="cupos" type="number" min="1" [(ngModel)]="vacante.cupos" required />
+            </label>
+            <label>Modalidad
+              <select name="modalidad" [(ngModel)]="vacante.modalidad" required>
+                <option value="PRESENCIAL">Presencial</option>
+                <option value="REMOTA">Remota</option>
+                <option value="HIBRIDA">Híbrida</option>
+              </select>
+            </label>
+          </div>
+          <label>Fecha de cierre
+            <input name="fechaCierre" type="date" [(ngModel)]="vacante.fechaCierre" required />
+          </label>
+          <button type="submit" class="principal" [disabled]="formVacante.invalid">Publicar vacante</button>
+        </form>
+
+        <div class="tarjeta">
+          <h2>Vacantes vigentes</h2>
+          <p class="ayuda">RF06 · Se listan las vacantes cuya fecha de cierre no ha vencido.</p>
+          @for (item of vacantes(); track item.id) {
+            <article class="vacante">
+              <div class="vacante-titulo">
+                <h3>{{ item.titulo }}</h3>
+                <span class="etiqueta ok">Publicada</span>
+              </div>
+              <p class="empresa">{{ item.empresa.razonSocial }} · {{ item.modalidad }} · {{ item.cupos }} cupo(s)</p>
+              <p>{{ item.descripcion }}</p>
+              <p><strong>Criterios de selección:</strong> {{ item.criteriosSeleccion }}</p>
+              <p class="cierre">Cierra el {{ item.fechaCierre | date: 'dd/MM/yyyy' }}</p>
+            </article>
+          } @empty {
+            <p class="vacio">Aún no hay vacantes publicadas.</p>
+          }
+        </div>
+      </section>
+    }
+
+    @case ('postulaciones') {
+      <section class="rejilla">
+        <form class="tarjeta" #formPostulacion="ngForm" (ngSubmit)="postular()">
+          <h2>Postularse a una vacante</h2>
+          <p class="ayuda">RF08 y RF09 · Exige autorización de datos y no admite postulaciones duplicadas.</p>
+          <label>Estudiante
+            <select name="idEstudiante" [(ngModel)]="postulacion.idEstudiante" required>
+              <option [ngValue]="null" disabled>Seleccione un estudiante</option>
+              @for (item of estudiantes(); track item.id) {
+                <option [ngValue]="item.id">{{ item.nombre }} ({{ item.documento }})</option>
+              }
+            </select>
+          </label>
+          <label>Vacante
+            <select name="idVacante" [(ngModel)]="postulacion.idVacante" required>
+              <option [ngValue]="null" disabled>Seleccione una vacante</option>
+              @for (item of vacantes(); track item.id) {
+                <option [ngValue]="item.id">{{ item.titulo }} — {{ item.empresa.razonSocial }}</option>
+              }
+            </select>
+          </label>
+          <label class="casilla">
+            <input name="autorizaDatos" type="checkbox" [(ngModel)]="postulacion.autorizaDatos" />
+            <span>Autorizo el tratamiento de mis datos personales para el proceso de prácticas,
+              según la política de tratamiento de datos versión 1.0 (Ley 1581 de 2012).</span>
+          </label>
+          <button type="submit" class="principal" [disabled]="formPostulacion.invalid">Enviar postulación</button>
+        </form>
+
+        <div class="tarjeta">
+          <h2>Postulaciones registradas</h2>
+          <div class="tabla-contenedor">
+            <table>
+              <thead>
+                <tr><th>Estudiante</th><th>Vacante</th><th>Empresa</th><th>Fecha</th><th>Estado</th></tr>
+              </thead>
+              <tbody>
+                @for (item of postulaciones(); track item.id) {
+                  <tr>
+                    <td>{{ item.estudiante.nombre }}</td>
+                    <td>{{ item.vacante.titulo }}</td>
+                    <td>{{ item.vacante.empresa.razonSocial }}</td>
+                    <td>{{ item.fechaPostulacion | date: 'dd/MM/yyyy HH:mm' }}</td>
+                    <td><span class="etiqueta pendiente">Postulada</span></td>
+                  </tr>
+                } @empty {
+                  <tr><td colspan="5" class="vacio">Aún no hay postulaciones.</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    }
+  }
+</main>
+
+<footer>
+  Ingeniería de software · Fundación Universitaria Católica del Norte · Angular + Spring Boot
+</footer>
